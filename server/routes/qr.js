@@ -14,7 +14,7 @@ router.post("/", async (req, res) => {
         }
 
         const shortId = nanoid(8);
-        const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
         const redirectUrl = `${baseUrl}/r/${shortId}`;
 
         // Generate QR code image as data URL
@@ -51,7 +51,7 @@ router.post("/", async (req, res) => {
 // READ — list all QR codes
 router.get("/", async (req, res) => {
     try {
-        const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
         const qrCodes = await QrCodeModel.find().sort({ createdAt: -1 });
 
         const result = await Promise.all(
@@ -94,7 +94,7 @@ router.put("/:id", async (req, res) => {
 
         if (!qr) return res.status(404).json({ error: "QR code not found" });
 
-        const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
         const redirectUrl = `${baseUrl}/r/${qr.shortId}`;
         const qrDataUrl = await QRCode.toDataURL(redirectUrl, {
             width: qr.size,
