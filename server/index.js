@@ -39,11 +39,6 @@ app.get("/r/:shortId", async function (req, res) {
             return res.status(404).json({ error: "QR code not found" });
         }
 
-        // Check if the QR code is disabled
-        if (!qr.isActive) {
-            return res.status(403).json({ error: "This QR code is currently disabled" });
-        }
-
         // Redirect the user to the target URL
         res.redirect(qr.targetUrl);
     } catch (err) {
