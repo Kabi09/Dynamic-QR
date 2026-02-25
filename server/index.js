@@ -35,6 +35,11 @@ app.get("/r/:shortId", async (req, res) => {
     }
 });
 
+// Demo route
+app.get("/demo", (req, res) => {
+    res.json({ message: "welcome" });
+});
+
 // Health check
 app.get("/", (req, res) => {
     res.json({ status: "Dynamic QR Code API is running 🚀" });
