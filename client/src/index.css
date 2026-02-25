@@ -1085,3 +1085,293 @@ body {
     box-shadow: var(--shadow-card);
   }
 }
+
+/* ===================================================== */
+/* ===== AUTH PAGES (Login, Signup, Forgot Password) ==== */
+/* ===================================================== */
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1.5rem;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
+    var(--bg-primary);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 2.5rem;
+  animation: fadeIn 0.5s ease;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--gradient-primary);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: white;
+  margin: 0 auto 1rem;
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.3);
+}
+
+.auth-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.auth-header p {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* Password input with eye toggle */
+.password-input {
+  position: relative;
+}
+
+.password-input input {
+  width: 100%;
+  padding: 0.85rem 3rem 0.85rem 1rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all var(--transition-base);
+  outline: none;
+}
+
+.password-input input:focus {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+  background: var(--bg-input-focus);
+}
+
+.password-input input::placeholder {
+  color: var(--text-muted);
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.25rem;
+  transition: color var(--transition-fast);
+}
+
+.password-toggle:hover {
+  color: var(--accent-purple-light);
+}
+
+/* OTP Input */
+.otp-input {
+  text-align: center;
+  letter-spacing: 10px;
+  font-size: 1.5rem !important;
+  font-weight: 700;
+}
+
+/* Step Indicator (Forgot Password) */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-top: 1.25rem;
+}
+
+.step-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--border-color);
+  transition: all var(--transition-base);
+}
+
+.step-dot.active {
+  background: var(--accent-purple);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+}
+
+.step-line {
+  width: 40px;
+  height: 2px;
+  background: var(--border-color);
+}
+
+/* Auth links */
+.auth-links {
+  margin-top: 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.auth-links p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.auth-links a {
+  color: var(--accent-purple-light);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.auth-links a:hover {
+  text-decoration: underline;
+}
+
+.forgot-link {
+  font-size: 0.85rem;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.guest-btn {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+/* ===== USER INFO (Sidebar) ===== */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--gradient-glow);
+  border: 1px solid var(--border-color);
+  margin-bottom: 0.5rem;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  background: var(--gradient-primary);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Logout Button */
+.logout-btn {
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  color: var(--accent-rose);
+  border-color: rgba(244, 63, 94, 0.15);
+}
+
+.logout-btn:hover {
+  background: rgba(244, 63, 94, 0.08);
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+/* ===== RESPONSIVE AUTH (≤ 768px) ===== */
+@media (max-width: 768px) {
+  .auth-card {
+    padding: 1.75rem;
+    max-width: 100%;
+  }
+
+  .auth-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 1.4rem;
+  }
+
+  .auth-header h2 {
+    font-size: 1.3rem;
+  }
+
+  /* Hide user-info and logout in mobile bottom nav */
+  .user-info {
+    display: none;
+  }
+
+  .logout-btn {
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.68rem;
+    border: none;
+    background: transparent;
+    margin-bottom: 0;
+    width: auto;
+  }
+
+  .logout-btn svg {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .auth-card {
+    padding: 1.25rem;
+  }
+
+  .otp-input {
+    letter-spacing: 6px;
+    font-size: 1.2rem !important;
+  }
+
+  .logout-btn {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.63rem;
+  }
+}

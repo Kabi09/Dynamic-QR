@@ -7,6 +7,7 @@ const express = require("express");       // Web server framework
 const mongoose = require("mongoose");     // MongoDB connection library
 const cors = require("cors");             // Allow frontend to talk to backend
 const qrRoutes = require("./routes/qr"); // Our QR code routes
+const authRoutes = require("./routes/auth"); // Auth routes (signup, login, etc.)
 const QrCodeModel = require("./models/QrCode"); // QR code database model
 
 // ===== Create the Express app =====
@@ -22,6 +23,9 @@ app.use(express.json());     // Parse JSON data from requests
 // ===== API Routes =====
 // All QR code CRUD operations are in /api/qr
 app.use("/api/qr", qrRoutes);
+
+// All auth operations are in /api/auth
+app.use("/api/auth", authRoutes);
 
 // ===== Redirect Route (Most important!) =====
 // When someone scans a QR code, they visit /r/shortId
