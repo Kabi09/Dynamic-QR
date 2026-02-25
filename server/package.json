@@ -1,0 +1,18 @@
+{
+  "name": "dynamic-qr-server",
+  "version": "1.0.0",
+  "description": "Backend for Dynamic URL QR Code app",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.10.1",
+    "nanoid": "^3.3.8",
+    "qrcode": "^1.5.4"
+  }
+}
