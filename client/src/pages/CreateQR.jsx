@@ -2,7 +2,7 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { HiQrCode, HiArrowDownTray, HiLink, HiDocument } from 'react-icons/hi2'
 
-const API_BASE = '/api/qr'
+const API_BASE = `${import.meta.env.VITE_API_BASE_URL || ''}/api/qr`
 
 const SIZE_OPTIONS = [
     { value: 200, label: '200×200 (Small)' },
