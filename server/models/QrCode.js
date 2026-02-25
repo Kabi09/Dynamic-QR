@@ -29,6 +29,12 @@ var qrCodeSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+
+    // Whether the QR code is active (true) or disabled (false)
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     // Automatically add createdAt and updatedAt fields

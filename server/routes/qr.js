@@ -50,6 +50,7 @@ router.post("/", async function (req, res) {
             size: savedQr.size,
             targetUrl: savedQr.targetUrl,
             shortId: savedQr.shortId,
+            isActive: savedQr.isActive,
             redirectUrl: redirectUrl,
             qrImage: qrImage,
             createdAt: savedQr.createdAt,
@@ -93,6 +94,7 @@ router.get("/", async function (req, res) {
                 size: qr.size,
                 targetUrl: qr.targetUrl,
                 shortId: qr.shortId,
+                isActive: qr.isActive,
                 redirectUrl: redirectUrl,
                 qrImage: qrImage,
                 createdAt: qr.createdAt,
@@ -155,6 +157,7 @@ router.put("/:id", async function (req, res) {
             size: updatedQr.size,
             targetUrl: updatedQr.targetUrl,
             shortId: updatedQr.shortId,
+            isActive: updatedQr.isActive,
             redirectUrl: redirectUrl,
             qrImage: qrImage,
             createdAt: updatedQr.createdAt,
@@ -162,6 +165,36 @@ router.put("/:id", async function (req, res) {
     } catch (err) {
         console.log("Update QR error:", err);
         res.status(500).json({ error: "Failed to update QR code" });
+    }
+});
+
+// ============================================
+// TOGGLE — Enable or Disable a QR code
+// PATCH /api/qr/:id/toggle
+// ============================================
+router.patch("/:id/toggle", async function (req, res) {
+    try {
+        // Step 1: Find the QR code in the database
+        var qr = await QrCodeModel.findById(req.params.id);
+
+        // Step 2: Check if it exists
+        if (!qr) {
+            return res.status(404).json({ error: "QR code not found" });
+        }
+
+        // Step 3: Flip the isActive value (true becomes false, false becomes true)
+        qr.isActive = !qr.isActive;
+        await qr.save();
+
+        // Step 4: Send back the updated status
+        res.json({
+            _id: qr._id,
+            isActive: qr.isActive,
+            message: qr.isActive ? "QR code enabled" : "QR code disabled",
+        });
+    } catch (err) {
+        console.log("Toggle QR error:", err);
+        res.status(500).json({ error: "Failed to toggle QR code" });
     }
 });
 

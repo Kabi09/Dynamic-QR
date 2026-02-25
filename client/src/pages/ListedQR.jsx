@@ -1,5 +1,5 @@
 // ===== Listed QR Codes Page =====
-// This page shows all created QR codes with edit and delete options
+// This page shows all created QR codes with edit, delete, and disable options
 
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
@@ -12,6 +12,8 @@ import {
     HiArrowDownTray,
     HiLink,
     HiQrCode,
+    HiNoSymbol,
+    HiPlay,
 } from 'react-icons/hi2'
 
 // API URL - uses environment variable in production
@@ -87,6 +89,34 @@ function ListedQR() {
             setQrCodes(updatedList)
             setEditingId(null)
             toast.success('QR updated! Link changed, QR stays the same ✨')
+        } catch (err) {
+            toast.error(err.message)
+        }
+    }
+
+    // ===== Toggle Enable/Disable a QR code =====
+    async function toggleQR(id) {
+        try {
+            var response = await fetch(API_URL + '/' + id + '/toggle', {
+                method: 'PATCH',
+            })
+
+            var data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error)
+            }
+
+            // Update the QR code's isActive status in the list
+            var updatedList = qrCodes.map(function (qr) {
+                if (qr._id === id) {
+                    return Object.assign({}, qr, { isActive: data.isActive })
+                }
+                return qr
+            })
+
+            setQrCodes(updatedList)
+            toast.success(data.message)
         } catch (err) {
             toast.error(err.message)
         }
@@ -169,7 +199,7 @@ function ListedQR() {
                 <div className="qr-grid">
                     {qrCodes.map(function (qr) {
                         return (
-                            <div key={qr._id} className="glass-card qr-card">
+                            <div key={qr._id} className={'glass-card qr-card' + (qr.isActive === false ? ' qr-card-disabled' : '')}>
 
                                 {/* Delete Confirmation Overlay */}
                                 {deletingId === qr._id && (
@@ -228,7 +258,12 @@ function ListedQR() {
 
                                             // ===== Display Mode =====
                                             <>
-                                                <h3 className="qr-card-name">{qr.name}</h3>
+                                                <div className="qr-card-name-row">
+                                                    <h3 className="qr-card-name">{qr.name}</h3>
+                                                    <span className={'badge ' + (qr.isActive === false ? 'badge-disabled' : 'badge-active')}>
+                                                        {qr.isActive === false ? 'Disabled' : 'Active'}
+                                                    </span>
+                                                </div>
                                                 <div className="qr-card-url">
                                                     <HiLink className="url-icon" />
                                                     <span>{qr.targetUrl}</span>
@@ -253,6 +288,19 @@ function ListedQR() {
                                         <button className="btn btn-accent btn-sm" onClick={function () { startEdit(qr) }}>
                                             <HiPencilSquare /> Edit
                                         </button>
+
+                                        {/* Disable / Enable Button */}
+                                        <button
+                                            className={'btn btn-sm ' + (qr.isActive === false ? 'btn-enable' : 'btn-disable')}
+                                            onClick={function () { toggleQR(qr._id) }}
+                                        >
+                                            {qr.isActive === false ? (
+                                                <><HiPlay /> Enable</>
+                                            ) : (
+                                                <><HiNoSymbol /> Disable</>
+                                            )}
+                                        </button>
+
                                         <button className="btn btn-danger btn-sm" onClick={function () { setDeletingId(qr._id) }}>
                                             <HiTrash /> Delete
                                         </button>
