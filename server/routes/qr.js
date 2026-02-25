@@ -1,49 +1,48 @@
-// ===== Import required packages =====
+// ===== QR Code Routes =====
+// Create, Read, Update, Delete QR codes
+// Each user only sees their own QR codes
+
 var express = require("express");
-var router = express.Router();           // Create a router to define routes
-var QRCode = require("qrcode");          // Library to generate QR code images
-var nanoid = require("nanoid");          // Library to generate random short IDs
-var QrCodeModel = require("../models/QrCode");  // Our database model
+var router = express.Router();
+var QRCode = require("qrcode");
+var nanoid = require("nanoid");
+var QrCodeModel = require("../models/QrCode");
+var authMiddleware = require("../middleware/auth");
 
 // ============================================
-// CREATE — Make a new QR code
+// CREATE — Make a new QR code (requires login)
 // POST /api/qr
 // ============================================
-router.post("/", async function (req, res) {
+router.post("/", authMiddleware, async function (req, res) {
     try {
-        // Step 1: Get the data from the request
         var name = req.body.name;
         var size = req.body.size || 300;
         var targetUrl = req.body.targetUrl;
 
-        // Step 2: Check if required fields are provided
         if (!name || !targetUrl) {
             return res.status(400).json({ error: "Name and Target URL are required" });
         }
 
-        // Step 3: Generate a random 8-character short ID
         var shortId = nanoid.nanoid(8);
 
-        // Step 4: Build the redirect URL using the current server address
         var serverUrl = req.protocol + "://" + req.get("host");
         var redirectUrl = serverUrl + "/r/" + shortId;
 
-        // Step 5: Generate the QR code image
         var qrImage = await QRCode.toDataURL(redirectUrl, {
             width: size,
             margin: 2,
             color: { dark: "#000000", light: "#ffffff" },
         });
 
-        // Step 6: Save to database
+        // Save with the userId of the logged-in user
         var savedQr = await QrCodeModel.create({
             name: name,
             size: size,
             targetUrl: targetUrl,
             shortId: shortId,
+            userId: req.user.userId,
         });
 
-        // Step 7: Send the response back
         res.status(201).json({
             _id: savedQr._id,
             name: savedQr.name,
@@ -61,32 +60,28 @@ router.post("/", async function (req, res) {
 });
 
 // ============================================
-// READ — Get all QR codes
+// READ — Get only YOUR QR codes (requires login)
 // GET /api/qr
 // ============================================
-router.get("/", async function (req, res) {
+router.get("/", authMiddleware, async function (req, res) {
     try {
-        // Step 1: Get server URL
         var serverUrl = req.protocol + "://" + req.get("host");
 
-        // Step 2: Get all QR codes from database (newest first)
-        var allQrCodes = await QrCodeModel.find().sort({ createdAt: -1 });
+        // Only get QR codes belonging to this user
+        var allQrCodes = await QrCodeModel.find({ userId: req.user.userId }).sort({ createdAt: -1 });
 
-        // Step 3: Loop through each QR code and add the image + redirect URL
         var result = [];
 
         for (var i = 0; i < allQrCodes.length; i++) {
             var qr = allQrCodes[i];
             var redirectUrl = serverUrl + "/r/" + qr.shortId;
 
-            // Generate the QR image
             var qrImage = await QRCode.toDataURL(redirectUrl, {
                 width: qr.size,
                 margin: 2,
                 color: { dark: "#000000", light: "#ffffff" },
             });
 
-            // Add to results array
             result.push({
                 _id: qr._id,
                 name: qr.name,
@@ -99,7 +94,6 @@ router.get("/", async function (req, res) {
             });
         }
 
-        // Step 4: Send all QR codes back
         res.json(result);
     } catch (err) {
         console.log("List QR error:", err);
@@ -108,37 +102,29 @@ router.get("/", async function (req, res) {
 });
 
 // ============================================
-// UPDATE — Edit a QR code's name or URL
+// UPDATE — Edit YOUR QR code (requires login)
 // PUT /api/qr/:id
 // ============================================
-router.put("/:id", async function (req, res) {
+router.put("/:id", authMiddleware, async function (req, res) {
     try {
-        // Step 1: Get the new values from the request
         var newName = req.body.name;
         var newTargetUrl = req.body.targetUrl;
 
-        // Step 2: Build the update object
         var updateData = {};
-        if (newName) {
-            updateData.name = newName;
-        }
-        if (newTargetUrl) {
-            updateData.targetUrl = newTargetUrl;
-        }
+        if (newName) updateData.name = newName;
+        if (newTargetUrl) updateData.targetUrl = newTargetUrl;
 
-        // Step 3: Find and update the QR code in the database
-        var updatedQr = await QrCodeModel.findByIdAndUpdate(
-            req.params.id,
+        // Only update if it belongs to this user
+        var updatedQr = await QrCodeModel.findOneAndUpdate(
+            { _id: req.params.id, userId: req.user.userId },
             updateData,
-            { new: true }  // Return the updated document
+            { new: true }
         );
 
-        // Step 4: Check if it exists
         if (!updatedQr) {
             return res.status(404).json({ error: "QR code not found" });
         }
 
-        // Step 5: Generate the redirect URL and QR image
         var serverUrl = req.protocol + "://" + req.get("host");
         var redirectUrl = serverUrl + "/r/" + updatedQr.shortId;
 
@@ -148,7 +134,6 @@ router.put("/:id", async function (req, res) {
             color: { dark: "#000000", light: "#ffffff" },
         });
 
-        // Step 6: Send the updated QR code back
         res.json({
             _id: updatedQr._id,
             name: updatedQr.name,
@@ -166,20 +151,21 @@ router.put("/:id", async function (req, res) {
 });
 
 // ============================================
-// DELETE — Remove a QR code
+// DELETE — Remove YOUR QR code (requires login)
 // DELETE /api/qr/:id
 // ============================================
-router.delete("/:id", async function (req, res) {
+router.delete("/:id", authMiddleware, async function (req, res) {
     try {
-        // Step 1: Find and delete the QR code
-        var deletedQr = await QrCodeModel.findByIdAndDelete(req.params.id);
+        // Only delete if it belongs to this user
+        var deletedQr = await QrCodeModel.findOneAndDelete({
+            _id: req.params.id,
+            userId: req.user.userId,
+        });
 
-        // Step 2: Check if it existed
         if (!deletedQr) {
             return res.status(404).json({ error: "QR code not found" });
         }
 
-        // Step 3: Send success message
         res.json({ message: "QR code deleted successfully" });
     } catch (err) {
         console.log("Delete QR error:", err);
@@ -187,5 +173,4 @@ router.delete("/:id", async function (req, res) {
     }
 });
 
-// ===== Export the router =====
 module.exports = router;

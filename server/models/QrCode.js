@@ -29,6 +29,13 @@ var qrCodeSchema = new mongoose.Schema(
             required: true,
             unique: true,
         },
+
+        // The user who created this QR code (links to User model)
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+        },
     },
     {
         // Automatically add createdAt and updatedAt fields

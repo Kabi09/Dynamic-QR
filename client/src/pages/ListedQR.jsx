@@ -1,5 +1,6 @@
 // ===== Listed QR Codes Page =====
-// This page shows all created QR codes with edit and delete options
+// Logged-in users: fetches from API (only their QR codes)
+// Guest users: reads from localStorage
 
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
@@ -14,24 +15,42 @@ import {
     HiQrCode,
 } from 'react-icons/hi2'
 
-// API URL - uses environment variable in production
 var API_URL = (import.meta.env.VITE_API_BASE_URL || '') + '/api/qr'
 
 function ListedQR() {
-    // ===== State variables =====
-    var [qrCodes, setQrCodes] = useState([])         // List of all QR codes
-    var [loading, setLoading] = useState(true)        // Loading state
-    var [editingId, setEditingId] = useState(null)    // ID of QR being edited
-    var [editName, setEditName] = useState('')        // Edit form - name
-    var [editUrl, setEditUrl] = useState('')          // Edit form - URL
-    var [deletingId, setDeletingId] = useState(null)  // ID of QR being deleted
+    var [qrCodes, setQrCodes] = useState([])
+    var [loading, setLoading] = useState(true)
+    var [editingId, setEditingId] = useState(null)
+    var [editName, setEditName] = useState('')
+    var [editUrl, setEditUrl] = useState('')
+    var [deletingId, setDeletingId] = useState(null)
 
-    // ===== Fetch all QR codes from the server =====
+    // Check if user is logged in or guest
+    function isLoggedIn() {
+        return localStorage.getItem('qr-token') !== null
+    }
+
+    function getToken() {
+        return localStorage.getItem('qr-token')
+    }
+
+    // ===== Fetch QR codes =====
     async function fetchQRCodes() {
         try {
-            var response = await fetch(API_URL)
-            var data = await response.json()
-            setQrCodes(data)
+            if (isLoggedIn()) {
+                // LOGGED-IN: Fetch from API (only this user's QR codes)
+                var response = await fetch(API_URL, {
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                    },
+                })
+                var data = await response.json()
+                setQrCodes(data)
+            } else {
+                // GUEST: Read from localStorage
+                var guestQrs = JSON.parse(localStorage.getItem('guest-qr-codes') || '[]')
+                setQrCodes(guestQrs)
+            }
         } catch (err) {
             toast.error('Failed to load QR codes')
         } finally {
@@ -39,75 +58,100 @@ function ListedQR() {
         }
     }
 
-    // ===== Load QR codes when page opens =====
     useEffect(function () {
         fetchQRCodes()
     }, [])
 
-    // ===== Start editing a QR code =====
+    // ===== Edit =====
     function startEdit(qr) {
         setEditingId(qr._id)
         setEditName(qr.name)
         setEditUrl(qr.targetUrl)
     }
 
-    // ===== Cancel editing =====
     function cancelEdit() {
         setEditingId(null)
         setEditName('')
         setEditUrl('')
     }
 
-    // ===== Save the edited QR code =====
     async function saveEdit(id) {
         try {
-            var response = await fetch(API_URL + '/' + id, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: editName,
-                    targetUrl: editUrl,
-                }),
-            })
+            if (isLoggedIn()) {
+                // LOGGED-IN: Update via API
+                var response = await fetch(API_URL + '/' + id, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + getToken(),
+                    },
+                    body: JSON.stringify({ name: editName, targetUrl: editUrl }),
+                })
 
-            var data = await response.json()
+                var data = await response.json()
 
-            if (!response.ok) {
-                throw new Error(data.error)
+                if (!response.ok) {
+                    throw new Error(data.error)
+                }
+
+                var updatedList = qrCodes.map(function (qr) {
+                    if (qr._id === id) return data
+                    return qr
+                })
+                setQrCodes(updatedList)
+            } else {
+                // GUEST: Update in localStorage
+                var guestQrs = JSON.parse(localStorage.getItem('guest-qr-codes') || '[]')
+                for (var i = 0; i < guestQrs.length; i++) {
+                    if (guestQrs[i]._id === id) {
+                        guestQrs[i].name = editName
+                        guestQrs[i].targetUrl = editUrl
+                        guestQrs[i].redirectUrl = editUrl
+
+                        // Regenerate QR image with new URL
+                        var QRCodeLib = (await import('qrcode')).default
+                        guestQrs[i].qrImage = await QRCodeLib.toDataURL(editUrl, {
+                            width: guestQrs[i].size,
+                            margin: 2,
+                            color: { dark: '#000000', light: '#ffffff' },
+                        })
+                        break
+                    }
+                }
+                localStorage.setItem('guest-qr-codes', JSON.stringify(guestQrs))
+                setQrCodes([].concat(guestQrs))
             }
 
-            // Update the QR code in the list
-            var updatedList = qrCodes.map(function (qr) {
-                if (qr._id === id) {
-                    return data  // Replace with updated data
-                }
-                return qr  // Keep unchanged
-            })
-
-            setQrCodes(updatedList)
             setEditingId(null)
-            toast.success('QR updated! Link changed, QR stays the same ✨')
+            toast.success(isLoggedIn() ? 'QR updated! Link changed, QR stays the same ✨' : 'QR updated in browser!')
         } catch (err) {
             toast.error(err.message)
         }
     }
 
-    // ===== Delete a QR code =====
+    // ===== Delete =====
     async function doDelete(id) {
         try {
-            var response = await fetch(API_URL + '/' + id, {
-                method: 'DELETE',
-            })
+            if (isLoggedIn()) {
+                // LOGGED-IN: Delete via API
+                var response = await fetch(API_URL + '/' + id, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                    },
+                })
 
-            if (!response.ok) {
-                throw new Error('Delete failed')
+                if (!response.ok) {
+                    throw new Error('Delete failed')
+                }
+            } else {
+                // GUEST: Delete from localStorage
+                var guestQrs = JSON.parse(localStorage.getItem('guest-qr-codes') || '[]')
+                guestQrs = guestQrs.filter(function (qr) { return qr._id !== id })
+                localStorage.setItem('guest-qr-codes', JSON.stringify(guestQrs))
             }
 
-            // Remove the QR code from the list
-            var filteredList = qrCodes.filter(function (qr) {
-                return qr._id !== id
-            })
-
+            var filteredList = qrCodes.filter(function (qr) { return qr._id !== id })
             setQrCodes(filteredList)
             setDeletingId(null)
             toast.success('QR code deleted')
@@ -116,7 +160,7 @@ function ListedQR() {
         }
     }
 
-    // ===== Download QR code image =====
+    // ===== Download =====
     function downloadQR(qr) {
         var link = document.createElement('a')
         link.download = qr.name + '-qr.png'
@@ -124,7 +168,6 @@ function ListedQR() {
         link.click()
     }
 
-    // ===== Show loading spinner =====
     if (loading) {
         return (
             <div className="page">
@@ -136,42 +179,36 @@ function ListedQR() {
         )
     }
 
-    // ===== Render the page =====
     return (
         <div className="page list-page">
-
-            {/* Page Header */}
             <div className="page-header">
-                <div className="page-header-icon">
-                    <HiListBullet />
-                </div>
+                <div className="page-header-icon"><HiListBullet /></div>
                 <div>
                     <h2>Listed QR Codes</h2>
-                    <p>{qrCodes.length} dynamic QR code{qrCodes.length !== 1 ? 's' : ''} created</p>
+                    <p>
+                        {qrCodes.length} QR code{qrCodes.length !== 1 ? 's' : ''}
+                        {isLoggedIn() ? ' saved to your account' : ' stored in browser'}
+                    </p>
                 </div>
             </div>
 
-            {/* Show empty state or QR code cards */}
             {qrCodes.length === 0 ? (
-
-                // ===== Empty State =====
                 <div className="glass-card empty-state">
-                    <div className="placeholder-icon">
-                        <HiQrCode />
-                    </div>
+                    <div className="placeholder-icon"><HiQrCode /></div>
                     <h3>No QR codes yet</h3>
-                    <p>Create your first dynamic QR code from the Create QR page</p>
+                    <p>
+                        {isLoggedIn()
+                            ? 'Create your first dynamic QR code from the Create QR page'
+                            : 'Create a QR code — it will be saved in your browser'
+                        }
+                    </p>
                 </div>
-
             ) : (
-
-                // ===== QR Code Cards Grid =====
                 <div className="qr-grid">
                     {qrCodes.map(function (qr) {
                         return (
                             <div key={qr._id} className="glass-card qr-card">
 
-                                {/* Delete Confirmation Overlay */}
                                 {deletingId === qr._id && (
                                     <div className="delete-overlay">
                                         <p>Delete this QR code?</p>
@@ -186,19 +223,12 @@ function ListedQR() {
                                     </div>
                                 )}
 
-                                {/* Card Top: Image + Info */}
                                 <div className="qr-card-top">
-
-                                    {/* QR Code Image */}
                                     <div className="qr-card-image">
                                         <img src={qr.qrImage} alt={qr.name} />
                                     </div>
-
-                                    {/* QR Code Info */}
                                     <div className="qr-card-info">
                                         {editingId === qr._id ? (
-
-                                            // ===== Edit Mode =====
                                             <div className="edit-form">
                                                 <input
                                                     type="text"
@@ -223,28 +253,26 @@ function ListedQR() {
                                                     </button>
                                                 </div>
                                             </div>
-
                                         ) : (
-
-                                            // ===== Display Mode =====
                                             <>
                                                 <h3 className="qr-card-name">{qr.name}</h3>
                                                 <div className="qr-card-url">
                                                     <HiLink className="url-icon" />
                                                     <span>{qr.targetUrl}</span>
                                                 </div>
-                                                <div className="qr-card-redirect">
-                                                    <span className="redirect-label">QR Points to:</span>
-                                                    <a href={qr.redirectUrl} target="_blank" rel="noopener noreferrer">
-                                                        {qr.redirectUrl}
-                                                    </a>
-                                                </div>
+                                                {qr.redirectUrl && isLoggedIn() && (
+                                                    <div className="qr-card-redirect">
+                                                        <span className="redirect-label">QR Points to:</span>
+                                                        <a href={qr.redirectUrl} target="_blank" rel="noopener noreferrer">
+                                                            {qr.redirectUrl}
+                                                        </a>
+                                                    </div>
+                                                )}
                                             </>
                                         )}
                                     </div>
                                 </div>
 
-                                {/* Action Buttons (shown when not editing) */}
                                 {editingId !== qr._id && (
                                     <div className="qr-card-actions">
                                         <button className="btn btn-secondary btn-sm" onClick={function () { downloadQR(qr) }}>
