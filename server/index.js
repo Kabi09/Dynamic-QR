@@ -1,60 +1,74 @@
-require("dotenv").config();
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const QrCodeModel = require("./models/QrCode");
-const qrRoutes = require("./routes/qr");
+// ===== Load environment variables from .env file =====
+const dotenv = require("dotenv");
+dotenv.config();
 
+// ===== Import required packages =====
+const express = require("express");       // Web server framework
+const mongoose = require("mongoose");     // MongoDB connection library
+const cors = require("cors");             // Allow frontend to talk to backend
+const qrRoutes = require("./routes/qr"); // Our QR code routes
+const QrCodeModel = require("./models/QrCode"); // QR code database model
+
+// ===== Create the Express app =====
 const app = express();
+
+// ===== Set the port number =====
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// ===== Middleware (runs on every request) =====
+app.use(cors());             // Allow requests from any website
+app.use(express.json());     // Parse JSON data from requests
 
-// API routes
+// ===== API Routes =====
+// All QR code CRUD operations are in /api/qr
 app.use("/api/qr", qrRoutes);
 
-// REDIRECT route — this is what the QR code points to
-app.get("/r/:shortId", async (req, res) => {
+// ===== Redirect Route (Most important!) =====
+// When someone scans a QR code, they visit /r/shortId
+// This finds the matching URL in the database and redirects them
+app.get("/r/:shortId", async function (req, res) {
     try {
-        const qr = await QrCodeModel.findOne({ shortId: req.params.shortId });
+        // Get the shortId from the URL
+        var shortId = req.params.shortId;
+
+        // Find the QR code in the database
+        var qr = await QrCodeModel.findOne({ shortId: shortId });
+
+        // If not found, show error
         if (!qr) {
-            return res.status(404).send(`
-        <html>
-          <body style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;background:#0f0f0f;color:#fff;">
-            <h1>🔗 Link not found</h1>
-          </body>
-        </html>
-      `);
+            return res.status(404).json({ error: "QR code not found" });
         }
-        res.redirect(302, qr.targetUrl);
+
+        // Redirect the user to the target URL
+        res.redirect(qr.targetUrl);
     } catch (err) {
-        console.error("Redirect error:", err);
-        res.status(500).send("Server error");
+        console.log("Redirect error:", err);
+        res.status(500).json({ error: "Server error" });
     }
 });
 
-// Demo route
-app.get("/demo", (req, res) => {
+// ===== Demo Route =====
+app.get("/demo", function (req, res) {
     res.json({ message: "welcome" });
 });
 
-// Health check
-app.get("/", (req, res) => {
+// ===== Home Route (Health Check) =====
+app.get("/", function (req, res) {
     res.json({ status: "Dynamic QR Code API is running 🚀" });
 });
 
-// Connect to MongoDB and start server
+// ===== Connect to MongoDB and Start Server =====
+var MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/dynamic-qr";
+
 mongoose
-    .connect(process.env.MONGO_URI)
-    .then(() => {
+    .connect(MONGO_URI)
+    .then(function () {
         console.log("✅ Connected to MongoDB");
-        app.listen(PORT, () => {
-            console.log(`🚀 Server running on http://localhost:${PORT}`);
+
+        app.listen(PORT, function () {
+            console.log("🚀 Server running on http://localhost:" + PORT);
         });
     })
-    .catch((err) => {
-        console.error("❌ MongoDB connection error:", err.message);
-        process.exit(1);
+    .catch(function (err) {
+        console.log("❌ MongoDB connection failed:", err);
     });

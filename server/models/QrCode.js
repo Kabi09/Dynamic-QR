@@ -1,31 +1,43 @@
-const mongoose = require("mongoose");
+// ===== Import mongoose to work with MongoDB =====
+var mongoose = require("mongoose");
 
-const qrCodeSchema = new mongoose.Schema(
+// ===== Define the shape of a QR Code document =====
+// This tells MongoDB what data each QR code should have
+var qrCodeSchema = new mongoose.Schema(
   {
+    // Name of the QR code (e.g. "My Website")
     name: {
       type: String,
-      required: [true, "Name is required"],
-      trim: true,
+      required: true,
     },
+
+    // Size of the QR image in pixels (e.g. 300)
     size: {
       type: Number,
       default: 300,
-      min: 100,
-      max: 1000,
     },
+
+    // The actual URL the QR code should redirect to
     targetUrl: {
       type: String,
-      required: [true, "Target URL is required"],
-      trim: true,
+      required: true,
     },
+
+    // A unique short ID used in the redirect link (e.g. "abc12345")
     shortId: {
       type: String,
       required: true,
       unique: true,
-      index: true,
     },
   },
-  { timestamps: true }
+  {
+    // Automatically add createdAt and updatedAt fields
+    timestamps: true,
+  }
 );
 
-module.exports = mongoose.model("QrCode", qrCodeSchema);
+// ===== Create and export the model =====
+// "QrCode" is the name of the collection in MongoDB
+var QrCodeModel = mongoose.model("QrCode", qrCodeSchema);
+
+module.exports = QrCodeModel;

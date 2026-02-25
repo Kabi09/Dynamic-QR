@@ -1,64 +1,64 @@
+// ===== Main App Component =====
+// This is the root component that sets up the layout and routing
+
 import { Routes, Route, NavLink } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { HiQrCode, HiListBullet } from 'react-icons/hi2'
-import CreateQR from './pages/CreateQR.jsx'
-import ListedQR from './pages/ListedQR.jsx'
+import CreateQR from './pages/CreateQR'
+import ListedQR from './pages/ListedQR'
 
 function App() {
     return (
         <div className="app">
-            <Toaster
-                position="top-right"
-                toastOptions={{
-                    style: {
-                        background: 'rgba(30, 30, 50, 0.95)',
-                        color: '#fff',
-                        border: '1px solid rgba(139, 92, 246, 0.3)',
-                        backdropFilter: 'blur(10px)',
-                    },
-                }}
-            />
 
-            {/* Sidebar */}
+            {/* ===== Sidebar Navigation ===== */}
             <aside className="sidebar">
+
+                {/* Logo */}
                 <div className="sidebar-logo">
                     <div className="logo-icon">
                         <HiQrCode />
                     </div>
-                    <h1>QR<span>Dynamic</span></h1>
+                    <h1><span>QR</span>Dynamic</h1>
                 </div>
 
+                {/* Navigation Links */}
                 <nav className="sidebar-nav">
-                    <NavLink
-                        to="/"
-                        end
-                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                    >
+                    <NavLink to="/" className="nav-link">
                         <HiQrCode className="nav-icon" />
                         <span>Create QR</span>
                     </NavLink>
-
-                    <NavLink
-                        to="/list"
-                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                    >
+                    <NavLink to="/list" className="nav-link">
                         <HiListBullet className="nav-icon" />
                         <span>Listed QR</span>
                     </NavLink>
                 </nav>
 
+                {/* Footer */}
                 <div className="sidebar-footer">
-                    <p>Permanent QR • Dynamic Links</p>
+                    <p>Dynamic QR Generator</p>
                 </div>
             </aside>
 
-            {/* Main Content */}
+            {/* ===== Main Content Area ===== */}
             <main className="main-content">
                 <Routes>
                     <Route path="/" element={<CreateQR />} />
                     <Route path="/list" element={<ListedQR />} />
                 </Routes>
             </main>
+
+            {/* ===== Toast Notifications ===== */}
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    style: {
+                        background: '#1e1e3a',
+                        color: '#f0f0ff',
+                        border: '1px solid rgba(139, 92, 246, 0.2)',
+                    },
+                }}
+            />
         </div>
     )
 }
