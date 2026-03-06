@@ -62,7 +62,7 @@ app.get("/", function (req, res) {
 });
 
 // ===== Connect to MongoDB and Start Server =====
-var MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/dynamic-qr";
+var MONGO_URI = process.env.MONGO_URI;
 
 mongoose
     .connect(MONGO_URI)

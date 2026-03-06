@@ -1,0 +1,24 @@
+services:
+  mongo:
+   image: "mongo"
+   ports:
+    - "27017:27017"
+
+  backend:
+    build: './server'
+    ports:
+     - "5000:5000"
+    depends_on:
+      - mongo
+    env_file:
+      - "./server/.env.prod"
+
+  frontend:
+    build: './client'
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    env_file:
+      - "./client/.env.prod"
+
