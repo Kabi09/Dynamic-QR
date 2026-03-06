@@ -97,7 +97,7 @@ function App() {
             <aside className="sidebar">
                 <div className="sidebar-logo">
                     <div className="logo-icon"><HiQrCode /></div>
-                    <h1><span>QR</span>Dynamic</h1>
+                    <h1><span>QR</span></h1>
                 </div>
 
                 <nav className="sidebar-nav">
