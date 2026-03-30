@@ -9,6 +9,11 @@ A MERN stack web application that generates **permanent QR codes** with **dynami
 3. When scanned, the server **redirects** to your target URL
 4. **Edit the URL** anytime — the QR code image stays the same forever
 
+## User Modes
+
+- **Guest Mode**: Try the app without an account. Limited to **1 QR code** (stored in browser).
+- **Registered User**: Sign up to create and manage **unlimited QR codes** securely.
+
 ## Tech Stack
 
 - **Frontend**: React + Vite
@@ -97,3 +102,4 @@ Open **http://localhost:5173**
 - **Listed QR** — Card grid with inline edit, delete confirmation, download
 - **Dynamic Redirect** — QR stays permanent, destination URL is changeable
 - **Dark Theme UI** — Glassmorphism, gradients, smooth animations
+- **Guest Logic** — Guest users are limited to 1 QR code; full access requires login.
