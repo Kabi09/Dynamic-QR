@@ -3,8 +3,9 @@
 // Guest: stores shortId in localStorage to remember their QR codes
 
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { HiQrCode, HiArrowDownTray, HiLink, HiDocument } from 'react-icons/hi2'
+import { HiQrCode, HiArrowDownTray, HiLink, HiDocument, HiExclamationTriangle } from 'react-icons/hi2'
 
 var API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 var API_URL = API_BASE + '/api/qr'
@@ -35,6 +36,15 @@ function CreateQR() {
     // ===== Handle form submit =====
     async function handleSubmit(e) {
         e.preventDefault()
+
+        // Guest restriction: only one QR code allowed
+        if (!isLoggedIn()) {
+            var savedIds = JSON.parse(localStorage.getItem('guest-qr-ids') || '[]')
+            if (savedIds.length >= 1) {
+                toast.error('Guest users can only generate 1 QR code. Please login to create more!')
+                return
+            }
+        }
 
         if (!name.trim() || !targetUrl.trim()) {
             toast.error('Please fill in all fields')
@@ -100,6 +110,14 @@ function CreateQR() {
                     <p>Generate a permanent QR code with a dynamic redirect link</p>
                 </div>
             </div>
+
+            {!isLoggedIn() && JSON.parse(localStorage.getItem('guest-qr-ids') || '[]').length >= 1 && (
+                <div className="alert alert-warning">
+                    <HiExclamationTriangle />
+                    <span>You've reached the <strong>Guest Limit (1 QR)</strong>. Please login to create unlimited QR codes!</span>
+                    <Link to="/login" className="alert-link">Login Now &rarr;</Link>
+                </div>
+            )}
 
             <div className="create-layout">
                 <div className="glass-card form-card">
