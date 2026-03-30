@@ -142,7 +142,7 @@ function App() {
             {/* ===== Main Content ===== */}
             <main className="main-content">
                 <Routes>
-                    <Route path="/" element={<CreateQR />} />
+                    <Route path="/" element={<CreateQR onLogout={handleLogout} />} />
                     <Route path="/list" element={<ListedQR />} />
                     <Route path="*" element={<Navigate to="/" />} />
                 </Routes>

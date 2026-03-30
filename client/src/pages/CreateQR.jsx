@@ -18,7 +18,7 @@ var SIZE_OPTIONS = [
     { value: 600, label: '600×600 (XXL)' },
 ]
 
-function CreateQR() {
+function CreateQR({ onLogout }) {
     var [name, setName] = useState('')
     var [size, setSize] = useState(300)
     var [targetUrl, setTargetUrl] = useState('')
@@ -115,7 +115,7 @@ function CreateQR() {
                 <div className="alert alert-warning">
                     <HiExclamationTriangle />
                     <span>You've reached the <strong>Guest Limit (1 QR)</strong>. Please login to create unlimited QR codes!</span>
-                    <Link to="/login" className="alert-link">Login Now &rarr;</Link>
+                    <Link to="/login" className="alert-link" onClick={onLogout}>Login Now &rarr;</Link>
                 </div>
             )}
 
